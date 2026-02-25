@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropFlow — Property Management, Reimagined</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #080a0e;
+  --off-black: #0f1218;
+  --card: #13171f;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.15);
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --green: #22c55e;
+  --green-glow: rgba(34,197,94,0.15);
+  --green-dim: rgba(34,197,94,0.06);
+  --amber: #f59e0b;
+  --blue: #3b82f6;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--black);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ─── NOISE TEXTURE OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 60px;
+  border-bottom: 1px solid transparent;
+  transition: all 0.4s;
+}
+nav.scrolled {
+  background: rgba(8,10,14,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom-color: var(--border);
+}
+.nav-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem; letter-spacing: 2px;
+  color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-logo-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
+
+.nav-links {
+  display: flex; gap: 36px; list-style: none;
+}
+.nav-links a {
+  text-decoration: none; color: var(--muted);
+  font-size: 0.82rem; font-weight: 500; letter-spacing: 0.3px;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+.btn-ghost {
+  background: none; border: 1px solid var(--border-bright);
+  color: var(--text); padding: 9px 20px; border-radius: 6px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.05); }
+.btn-cta {
+  background: var(--green); color: #000;
+  border: none; padding: 10px 22px; border-radius: 6px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 0 20px var(--green-glow);
+}
+.btn-cta:hover { background: #16a34a; transform: translateY(-1px); box-shadow: 0 4px 30px rgba(34,197,94,0.3); }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 140px 40px 80px;
+  position: relative; overflow: hidden;
+}
+
+/* Radial glow behind hero */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 10%; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(34,197,94,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Floating grid lines */
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--green-dim); border: 1px solid rgba(34,197,94,0.2);
+  color: var(--green); border-radius: 100px;
+  padding: 6px 16px; font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 32px;
+  animation: fadeUp 0.8s ease both;
+}
+.hero-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(5rem, 12vw, 10rem);
+  line-height: 0.92;
+  letter-spacing: 3px;
+  color: var(--text);
+  margin-bottom: 12px;
+  animation: fadeUp 0.8s 0.1s ease both;
+}
+.hero-title em {
+  font-style: italic;
+  font-family: 'Lora', serif;
+  color: var(--green);
+  font-size: 0.85em;
+  letter-spacing: 0px;
+}
+
+.hero-sub {
+  font-family: 'Lora', serif;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  color: var(--muted); max-width: 520px;
+  line-height: 1.7; margin: 0 auto 48px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+
+.hero-actions {
+  display: flex; align-items: center; gap: 16px;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+.btn-hero {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--green); color: #000;
+  border: none; padding: 15px 32px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: all 0.25s;
+  box-shadow: 0 0 40px rgba(34,197,94,0.25);
+  text-decoration: none;
+}
+.btn-hero:hover { background: #16a34a; transform: translateY(-2px); box-shadow: 0 8px 40px rgba(34,197,94,0.4); }
+.btn-hero-arrow {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+.btn-hero:hover .btn-hero-arrow { transform: translateX(3px); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--muted); font-size: 0.85rem; font-weight: 500;
+  cursor: pointer; transition: color 0.2s; text-decoration: none;
+  background: none; border: none;
+}
+.btn-secondary:hover { color: var(--text); }
+.play-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border-bright);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; padding-left: 2px;
+  transition: all 0.2s;
+}
+.btn-secondary:hover .play-icon { border-color: var(--green); color: var(--green); }
+
+/* Stats row */
+.hero-stats {
+  display: flex; gap: 0; margin-top: 80px;
+  border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.02);
+  animation: fadeUp 0.8s 0.4s ease both;
+}
+.hero-stat {
+  padding: 20px 40px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+.hero-stat:last-child { border-right: none; }
+.hero-stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem; color: var(--text); letter-spacing: 2px;
+  line-height: 1;
+}
+.hero-stat-num span { color: var(--green); }
+.hero-stat-label { font-size: 0.7rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; }
+
+/* ─── DASHBOARD PREVIEW ─── */
+.preview-section {
+  padding: 80px 60px;
+  position: relative;
+}
+.section-label {
+  text-align: center;
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--green);
+  margin-bottom: 16px;
+}
+.section-title {
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  letter-spacing: 2px; color: var(--text);
+  margin-bottom: 12px;
+}
+.section-sub {
+  text-align: center;
+  font-family: 'Lora', serif;
+  font-size: 1rem; color: var(--muted);
+  max-width: 440px; margin: 0 auto 56px; line-height: 1.7;
+}
+
+.app-frame {
+  max-width: 1100px; margin: 0 auto;
+  border-radius: 16px; overflow: hidden;
+  border: 1px solid var(--border-bright);
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 60px rgba(34,197,94,0.04);
+  position: relative;
+}
+.app-frame-bar {
+  background: #1a1f2b; padding: 12px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.frame-dot { width: 10px; height: 10px; border-radius: 50%; }
+.app-frame-url {
+  flex: 1; background: rgba(255,255,255,0.04); border-radius: 6px;
+  padding: 4px 12px; font-size: 0.72rem; color: var(--muted);
+  text-align: center; margin: 0 12px;
+}
+.app-frame-inner {
+  background: #0d1117;
+  display: grid; grid-template-columns: 200px 1fr;
+  height: 480px; overflow: hidden;
+}
+.mock-sidebar {
+  background: #161b22; border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 20px 0;
+}
+.mock-logo {
+  padding: 0 16px 20px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 2px;
+  color: #e6edf3; display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 12px;
+}
+.mock-logo-icon {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: linear-gradient(135deg, #22c55e, #3b82f6);
+  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+}
+.mock-nav-label {
+  font-size: 0.55rem; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #4b5563;
+  padding: 10px 16px 4px;
+}
+.mock-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 16px; font-size: 0.72rem; color: #6b7280;
+  border-left: 2px solid transparent;
+}
+.mock-nav-item.active {
+  color: #22c55e; background: rgba(34,197,94,0.07);
+  border-left-color: #22c55e;
+}
+.mock-nav-item .dot { width: 14px; text-align: center; font-size: 0.8rem; }
+
+.mock-main { padding: 20px; overflow: hidden; }
+.mock-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
+.mock-stat {
+  background: #161b22; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; padding: 12px;
+}
+.mock-stat-label { font-size: 0.58rem; color: #6b7280; margin-bottom: 4px; }
+.mock-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 1px; }
+.mock-stat-change { font-size: 0.55rem; color: #22c55e; margin-top: 2px; }
+
+.mock-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+.mock-card {
+  background: #161b22; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; padding: 12px;
+}
+.mock-card-title { font-size: 0.65rem; font-weight: 600; color: #8b949e; margin-bottom: 10px; }
+.mock-bars { display: flex; align-items: flex-end; gap: 5px; height: 70px; }
+.mock-bar { flex: 1; border-radius: 3px 3px 0 0; }
+.mock-table-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.6rem; color: #8b949e;
+}
+.mock-status {
+  padding: 2px 6px; border-radius: 10px; font-size: 0.55rem; font-weight: 700;
+}
+
+/* Frame overlay CTA */
+.frame-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(8,10,14,0.95) 100%);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 40px;
+  border-radius: 16px;
+}
+.frame-cta-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--green); color: #000;
+  border: none; padding: 14px 28px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 700;
+  cursor: pointer; transition: all 0.25s;
+  box-shadow: 0 0 40px rgba(34,197,94,0.4);
+  text-decoration: none;
+}
+.frame-cta-btn:hover { background: #16a34a; transform: translateY(-2px); }
+
+/* ─── FEATURES ─── */
+.features-section {
+  padding: 100px 60px;
+  background: var(--off-black);
+  position: relative;
+}
+.features-section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
+}
+
+.features-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 2px;
+  border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+}
+.feature-card {
+  background: var(--card); padding: 40px 32px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.25s;
+  position: relative; overflow: hidden;
+}
+.feature-card:hover { background: #161b22; }
+.feature-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--green); opacity: 0;
+  transition: opacity 0.25s;
+}
+.feature-card:hover::before { opacity: 1; }
+.feature-card:nth-child(3), .feature-card:nth-child(6), .feature-card:nth-child(9) { border-right: none; }
+
+.feature-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; margin-bottom: 20px;
+}
+.feature-name {
+  font-family: 'Lora', serif; font-size: 1.05rem; font-weight: 600;
+  color: var(--text); margin-bottom: 10px;
+}
+.feature-desc {
+  font-size: 0.82rem; color: var(--muted); line-height: 1.7;
+}
+
+/* ─── SOCIAL PROOF ─── */
+.social-section {
+  padding: 100px 60px;
+  overflow: hidden;
+}
+.logos-track {
+  display: flex; gap: 60px; align-items: center;
+  animation: scroll 20s linear infinite;
+  width: max-content;
+}
+@keyframes scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.logos-wrap {
+  overflow: hidden; position: relative;
+  mask-image: linear-gradient(90deg, transparent, black 15%, black 85%, transparent);
+}
+.logo-pill {
+  padding: 10px 24px; border: 1px solid var(--border);
+  border-radius: 100px; font-size: 0.78rem; font-weight: 600;
+  color: var(--muted); white-space: nowrap;
+  background: var(--card);
+}
+
+.testimonials {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+  max-width: 1100px; margin: 60px auto 0;
+}
+.testimonial {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px;
+  transition: border-color 0.2s;
+}
+.testimonial:hover { border-color: var(--border-bright); }
+.testimonial-text {
+  font-family: 'Lora', serif; font-style: italic;
+  font-size: 0.9rem; color: var(--text); line-height: 1.7;
+  margin-bottom: 20px;
+}
+.testimonial-author { display: flex; align-items: center; gap: 12px; }
+.testimonial-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 0.75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.testimonial-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+.testimonial-role { font-size: 0.7rem; color: var(--muted); }
+.stars { color: var(--amber); font-size: 0.8rem; margin-bottom: 14px; }
+
+/* ─── PRICING ─── */
+.pricing-section {
+  padding: 100px 60px;
+  background: var(--off-black);
+  position: relative;
+}
+.pricing-section::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
+}
+.pricing-grid {
+  max-width: 1000px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
+}
+.pricing-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px; position: relative;
+  transition: all 0.25s;
+}
+.pricing-card:hover { border-color: var(--border-bright); transform: translateY(-4px); }
+.pricing-card.featured {
+  border-color: rgba(34,197,94,0.4);
+  background: linear-gradient(160deg, #111a14, var(--card));
+  box-shadow: 0 0 60px rgba(34,197,94,0.08);
+}
+.pricing-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--green); color: #000; border-radius: 100px;
+  padding: 4px 16px; font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 0.5px; white-space: nowrap;
+}
+.pricing-plan {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+}
+.pricing-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.5rem; letter-spacing: 2px; color: var(--text); line-height: 1;
+}
+.pricing-price sub { font-family: 'DM Sans', sans-serif; font-size: 1rem; color: var(--muted); font-weight: 400; }
+.pricing-units { font-size: 0.75rem; color: var(--muted); margin: 8px 0 24px; }
+.pricing-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
+.pricing-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.pricing-feature { display: flex; align-items: center; gap: 10px; font-size: 0.78rem; color: var(--muted); }
+.pricing-feature .check { color: var(--green); font-size: 0.8rem; }
+.pricing-btn {
+  width: 100%; padding: 12px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.pricing-btn-outline {
+  background: transparent; border: 1px solid var(--border-bright); color: var(--text);
+}
+.pricing-btn-outline:hover { background: rgba(255,255,255,0.05); }
+.pricing-btn-solid { background: var(--green); border: none; color: #000; }
+.pricing-btn-solid:hover { background: #16a34a; }
+
+/* ─── CTA SECTION ─── */
+.cta-section {
+  padding: 120px 60px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.cta-glow {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(ellipse, rgba(34,197,94,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 7vw, 6rem);
+  letter-spacing: 3px; color: var(--text);
+  line-height: 0.95; margin-bottom: 20px;
+  position: relative;
+}
+.cta-title em { font-family: 'Lora', serif; color: var(--green); font-style: italic; letter-spacing: 0; }
+.cta-sub {
+  font-family: 'Lora', serif; font-size: 1rem; color: var(--muted);
+  max-width: 400px; margin: 0 auto 40px; line-height: 1.7;
+  position: relative;
+}
+.cta-actions { display: flex; align-items: center; justify-content: center; gap: 16px; position: relative; }
+.cta-note { font-size: 0.72rem; color: var(--muted); margin-top: 16px; }
+
+/* ─── FOOTER ─── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.footer-logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+  letter-spacing: 2px; color: var(--muted);
+}
+.footer-links { display: flex; gap: 28px; }
+.footer-links a {
+  text-decoration: none; color: var(--muted);
+  font-size: 0.78rem; transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--text); }
+.footer-copy { font-size: 0.72rem; color: var(--muted); }
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ─── DEMO MODAL ─── */
+.demo-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85); z-index: 999;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.demo-overlay.open { display: flex; }
+.demo-modal {
+  background: var(--card); border: 1px solid var(--border-bright);
+  border-radius: 20px; padding: 36px; width: 460px; max-width: 95vw;
+  animation: fadeUp 0.3s ease;
+  text-align: center;
+}
+.demo-icon { font-size: 3rem; margin-bottom: 16px; }
+.demo-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+  letter-spacing: 2px; color: var(--text); margin-bottom: 8px;
+}
+.demo-desc {
+  font-family: 'Lora', serif; font-size: 0.9rem;
+  color: var(--muted); line-height: 1.7; margin-bottom: 28px;
+}
+.demo-form { display: flex; flex-direction: column; gap: 12px; }
+.demo-input {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 14px;
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+  outline: none; transition: border-color 0.2s; width: 100%;
+}
+.demo-input:focus { border-color: rgba(34,197,94,0.5); }
+.demo-submit {
+  background: var(--green); color: #000;
+  border: none; border-radius: 8px; padding: 13px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.demo-submit:hover { background: #16a34a; }
+.demo-skip {
+  font-size: 0.75rem; color: var(--muted); margin-top: 12px;
+  cursor: pointer; transition: color 0.2s; background: none; border: none;
+}
+.demo-skip:hover { color: var(--text); }
+.demo-close {
+  position: absolute; top: 16px; right: 20px;
+  color: var(--muted); cursor: pointer; font-size: 1.2rem;
+  background: none; border: none; transition: color 0.2s;
+}
+.demo-close:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">
+    <div class="nav-logo-dot"></div>
+    PROPFLOW
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#testimonials">Customers</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn-ghost">Sign In</button>
+    <button class="btn-cta" onclick="openDemo()">Get Started Free</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+
+  <div class="hero-eyebrow">
+    <div class="hero-eyebrow-dot"></div>
+    Now in Public Beta — 2,400+ portfolios managed
+  </div>
+
+  <h1 class="hero-title">
+    PROPERTY<br>
+    <em>management</em><br>
+    EVOLVED
+  </h1>
+
+  <p class="hero-sub">
+    The all-in-one platform that replaces five tools with one. Rent collection, leasing, maintenance, accounting — all beautifully unified.
+  </p>
+
+  <div class="hero-actions">
+    <a class="btn-hero" href="propflow.html" target="_blank">
+      🚀 Launch Live Demo
+      <div class="btn-hero-arrow">→</div>
+    </a>
+    <button class="btn-secondary" onclick="openDemo()">
+      <div class="play-icon">▶</div>
+      Watch Overview
+    </button>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num"><span>94</span>%</div>
+      <div class="hero-stat-label">Avg Occupancy Rate</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">2.4<span>hrs</span></div>
+      <div class="hero-stat-label">Saved Per Week</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num"><span>$</span>0</div>
+      <div class="hero-stat-label">Setup Fee</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">14<span>d</span></div>
+      <div class="hero-stat-label">Free Trial</div>
+    </div>
+  </div>
+</section>
+
+<!-- APP PREVIEW -->
+<section class="preview-section" id="demo">
+  <div class="section-label reveal">See it in action</div>
+  <h2 class="section-title reveal">Your entire portfolio,<br>one clean view</h2>
+  <p class="section-sub reveal">See exactly what PropFlow looks like — no sign-up required. Click below to explore the full interactive demo.</p>
+
+  <div class="app-frame reveal">
+    <!-- Browser chrome -->
+    <div class="app-frame-bar">
+      <div class="frame-dot" style="background:#ff5f57"></div>
+      <div class="frame-dot" style="background:#febc2e"></div>
+      <div class="frame-dot" style="background:#28c840"></div>
+      <div class="app-frame-url">app.propflow.io/dashboard</div>
+    </div>
+
+    <!-- Mini app mockup -->
+    <div class="app-frame-inner">
+      <div class="mock-sidebar">
+        <div class="mock-logo">
+          <div class="mock-logo-icon">🏢</div> PropFlow
+        </div>
+        <div class="mock-nav-label">Overview</div>
+        <div class="mock-nav-item active"><span class="dot">⊞</span> Dashboard</div>
+        <div class="mock-nav-item"><span class="dot">📈</span> Analytics</div>
+        <div class="mock-nav-label">Management</div>
+        <div class="mock-nav-item"><span class="dot">🏠</span> Properties</div>
+        <div class="mock-nav-item"><span class="dot">👥</span> Tenants</div>
+        <div class="mock-nav-item"><span class="dot">📝</span> Leasing</div>
+        <div class="mock-nav-item"><span class="dot">🔧</span> Maintenance</div>
+        <div class="mock-nav-label">Finance</div>
+        <div class="mock-nav-item"><span class="dot">💰</span> Accounting</div>
+        <div class="mock-nav-item"><span class="dot">📊</span> Reports</div>
+      </div>
+      <div class="mock-main">
+        <div class="mock-stats">
+          <div class="mock-stat">
+            <div class="mock-stat-label">Total Units</div>
+            <div class="mock-stat-val" style="color:#e6edf3">248</div>
+            <div class="mock-stat-change">↑ 12 new</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Revenue</div>
+            <div class="mock-stat-val" style="color:#58a6ff">$91.4k</div>
+            <div class="mock-stat-change">↑ 4.2%</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Occupancy</div>
+            <div class="mock-stat-val" style="color:#22c55e">94.1%</div>
+            <div class="mock-stat-change">↑ 1.3%</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-label">Maintenance</div>
+            <div class="mock-stat-val" style="color:#f78166">14</div>
+            <div class="mock-stat-change" style="color:#f78166">3 new</div>
+          </div>
+        </div>
+        <div class="mock-grid">
+          <div class="mock-card">
+            <div class="mock-card-title">Revenue — Feb 2026</div>
+            <div class="mock-bars">
+              <div class="mock-bar" style="height:55%;background:rgba(88,166,255,0.3)"></div>
+              <div class="mock-bar" style="height:62%;background:rgba(88,166,255,0.35)"></div>
+              <div class="mock-bar" style="height:58%;background:rgba(88,166,255,0.3)"></div>
+              <div class="mock-bar" style="height:70%;background:rgba(88,166,255,0.4)"></div>
+              <div class="mock-bar" style="height:65%;background:rgba(88,166,255,0.35)"></div>
+              <div class="mock-bar" style="height:100%;background:linear-gradient(180deg,#22c55e,rgba(34,197,94,0.3))"></div>
+            </div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-title">Recent Payments</div>
+            <div class="mock-table-row"><span>A. Morris</span><span>$1,850</span><span class="mock-status" style="background:rgba(34,197,94,0.1);color:#22c55e">Paid</span></div>
+            <div class="mock-table-row"><span>C. Reyes</span><span>$2,100</span><span class="mock-status" style="background:rgba(34,197,94,0.1);color:#22c55e">Paid</span></div>
+            <div class="mock-table-row"><span>S. Chen</span><span>$1,650</span><span class="mock-status" style="background:rgba(210,153,34,0.1);color:#d29922">Pending</span></div>
+            <div class="mock-table-row"><span>M. Webb</span><span>$1,975</span><span class="mock-status" style="background:rgba(247,129,102,0.1);color:#f78166">Overdue</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay with CTA -->
+    <div class="frame-overlay">
+      <a class="frame-cta-btn" href="propflow.html" target="_blank">
+        🚀 Open Interactive Demo — No sign-up needed
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-label reveal">Everything you need</div>
+  <h2 class="section-title reveal">Built for modern<br>property managers</h2>
+  <p class="section-sub reveal">Nine powerful modules, zero complexity. Replace your spreadsheets, emails, and disconnected tools with one platform.</p>
+
+  <div class="features-grid reveal">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(34,197,94,0.1)">🏠</div>
+      <div class="feature-name">Portfolio Dashboard</div>
+      <div class="feature-desc">Real-time overview of all properties, occupancy rates, revenue, and maintenance — at a glance, with drill-down analytics.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(59,130,246,0.1)">💰</div>
+      <div class="feature-name">Automated Rent Collection</div>
+      <div class="feature-desc">ACH, card, and bank transfer support. Automatic reminders, late fees, and instant ledger posting. Zero manual entry.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(245,158,11,0.1)">📝</div>
+      <div class="feature-name">Leasing Pipeline</div>
+      <div class="feature-desc">Track leads from inquiry to signed lease. AI-powered tenant screening, background checks, and digital signatures built in.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(247,129,102,0.1)">🔧</div>
+      <div class="feature-name">Maintenance Management</div>
+      <div class="feature-desc">Tenants submit requests via portal. You assign vendors, track progress, and close tickets — with full cost reporting.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(188,140,255,0.1)">📊</div>
+      <div class="feature-name">Accounting & Reporting</div>
+      <div class="feature-desc">Full double-entry accounting, bank reconciliation, and 15+ reports including income statements, rent rolls, and owner reports.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(34,197,94,0.1)">💬</div>
+      <div class="feature-name">Tenant Communication</div>
+      <div class="feature-desc">Centralized inbox for tenant messages, automated announcements, lease renewal reminders, and notice delivery.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(59,130,246,0.1)">🌐</div>
+      <div class="feature-name">Owner & Tenant Portals</div>
+      <div class="feature-desc">White-labeled portals where owners view statements and tenants pay rent, submit requests, and manage documents.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(245,158,11,0.1)">🤖</div>
+      <div class="feature-name">AI Insights</div>
+      <div class="feature-desc">Smart alerts for delinquency risk, lease expiration forecasting, market rent comparisons, and vacancy predictions.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(247,129,102,0.1)">🔗</div>
+      <div class="feature-name">Integrations</div>
+      <div class="feature-desc">Connects with Stripe, QuickBooks, Zillow, Apartments.com, DocuSign, and 40+ more tools via native integrations.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="social-section" id="testimonials">
+  <div class="section-label reveal">Trusted by property managers</div>
+  <h2 class="section-title reveal">What our customers say</h2>
+
+  <div class="logos-wrap reveal" style="margin: 40px 0">
+    <div class="logos-track">
+      <div class="logo-pill">Meridian Properties</div>
+      <div class="logo-pill">BlueStar Realty</div>
+      <div class="logo-pill">Coastal Holdings</div>
+      <div class="logo-pill">Urban Nest Group</div>
+      <div class="logo-pill">Oakwood Management</div>
+      <div class="logo-pill">Summit RE Partners</div>
+      <div class="logo-pill">Harbor View LLC</div>
+      <div class="logo-pill">Pacific Property Co.</div>
+      <!-- Duplicate for seamless scroll -->
+      <div class="logo-pill">Meridian Properties</div>
+      <div class="logo-pill">BlueStar Realty</div>
+      <div class="logo-pill">Coastal Holdings</div>
+      <div class="logo-pill">Urban Nest Group</div>
+      <div class="logo-pill">Oakwood Management</div>
+      <div class="logo-pill">Summit RE Partners</div>
+      <div class="logo-pill">Harbor View LLC</div>
+      <div class="logo-pill">Pacific Property Co.</div>
+    </div>
+  </div>
+
+  <div class="testimonials">
+    <div class="testimonial reveal">
+      <div class="stars">★★★★★</div>
+      <div class="testimonial-text">"We switched from AppFolio and haven't looked back. PropFlow's reporting is leagues ahead, and the UI makes onboarding new team members effortless."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:rgba(34,197,94,0.15);color:#22c55e">MR</div>
+        <div>
+          <div class="testimonial-name">Maria Rodriguez</div>
+          <div class="testimonial-role">CEO, Coastal Holdings · 340 units</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial reveal">
+      <div class="stars">★★★★★</div>
+      <div class="testimonial-text">"The automated rent collection alone saves us 8 hours a month. The maintenance workflow is exactly what we needed — our tenants love submitting requests through the portal."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:rgba(59,130,246,0.15);color:#3b82f6">DK</div>
+        <div>
+          <div class="testimonial-name">David Kim</div>
+          <div class="testimonial-role">Principal, Urban Nest Group · 180 units</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial reveal">
+      <div class="stars">★★★★★</div>
+      <div class="testimonial-text">"Finally, a property management platform that feels like it was designed in this decade. Clean, fast, and the AI insights have helped us reduce vacancy by 22%."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar" style="background:rgba(245,158,11,0.15);color:#f59e0b">SL</div>
+        <div>
+          <div class="testimonial-name">Sarah Lin</div>
+          <div class="testimonial-role">Director, Summit RE Partners · 520 units</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="section-label reveal">Simple, transparent pricing</div>
+  <h2 class="section-title reveal">Grow without limits</h2>
+  <p class="section-sub reveal">No per-unit fees. No hidden charges. One flat monthly rate based on your portfolio size.</p>
+
+  <div class="pricing-grid reveal">
+    <div class="pricing-card">
+      <div class="pricing-plan">Starter</div>
+      <div class="pricing-price">$79<sub>/mo</sub></div>
+      <div class="pricing-units">Up to 50 units</div>
+      <div class="pricing-divider"></div>
+      <div class="pricing-features">
+        <div class="pricing-feature"><span class="check">✓</span> Dashboard & Analytics</div>
+        <div class="pricing-feature"><span class="check">✓</span> Rent Collection</div>
+        <div class="pricing-feature"><span class="check">✓</span> Tenant Portal</div>
+        <div class="pricing-feature"><span class="check">✓</span> Maintenance Tracking</div>
+        <div class="pricing-feature"><span class="check">✓</span> Basic Reports</div>
+        <div class="pricing-feature" style="opacity:0.4"><span>—</span> Owner Portal</div>
+        <div class="pricing-feature" style="opacity:0.4"><span>—</span> AI Insights</div>
+      </div>
+      <button class="pricing-btn pricing-btn-outline" onclick="openDemo()">Start Free Trial</button>
+    </div>
+
+    <div class="pricing-card featured">
+      <div class="pricing-badge">MOST POPULAR</div>
+      <div class="pricing-plan">Professional</div>
+      <div class="pricing-price">$299<sub>/mo</sub></div>
+      <div class="pricing-units">Up to 500 units</div>
+      <div class="pricing-divider"></div>
+      <div class="pricing-features">
+        <div class="pricing-feature"><span class="check">✓</span> Everything in Starter</div>
+        <div class="pricing-feature"><span class="check">✓</span> Full Accounting Suite</div>
+        <div class="pricing-feature"><span class="check">✓</span> Owner Portal</div>
+        <div class="pricing-feature"><span class="check">✓</span> Leasing Pipeline & CRM</div>
+        <div class="pricing-feature"><span class="check">✓</span> AI Tenant Screening</div>
+        <div class="pricing-feature"><span class="check">✓</span> AI Insights</div>
+        <div class="pricing-feature"><span class="check">✓</span> Priority Support</div>
+      </div>
+      <button class="pricing-btn pricing-btn-solid" onclick="openDemo()">Start Free Trial</button>
+    </div>
+
+    <div class="pricing-card">
+      <div class="pricing-plan">Enterprise</div>
+      <div class="pricing-price" style="font-size:2.5rem">Custom</div>
+      <div class="pricing-units">500+ units · Unlimited properties</div>
+      <div class="pricing-divider"></div>
+      <div class="pricing-features">
+        <div class="pricing-feature"><span class="check">✓</span> Everything in Pro</div>
+        <div class="pricing-feature"><span class="check">✓</span> Custom Integrations</div>
+        <div class="pricing-feature"><span class="check">✓</span> White-label Portals</div>
+        <div class="pricing-feature"><span class="check">✓</span> Dedicated CSM</div>
+        <div class="pricing-feature"><span class="check">✓</span> SLA Guarantee</div>
+        <div class="pricing-feature"><span class="check">✓</span> API Access</div>
+        <div class="pricing-feature"><span class="check">✓</span> Custom Reporting</div>
+      </div>
+      <button class="pricing-btn pricing-btn-outline" onclick="openDemo()">Contact Sales</button>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="cta-title reveal">
+    READY TO<br><em>modernize</em><br>YOUR PORTFOLIO?
+  </div>
+  <p class="cta-sub reveal">Join 2,400+ property managers who've made the switch. No credit card required.</p>
+  <div class="cta-actions reveal">
+    <a class="btn-hero" href="propflow.html" target="_blank">
+      🚀 Launch Demo Now
+      <div class="btn-hero-arrow">→</div>
+    </a>
+    <button class="btn-ghost" onclick="openDemo()">Start Free Trial</button>
+  </div>
+  <p class="cta-note reveal">14-day free trial · No setup fees · Cancel anytime</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PROPFLOW</div>
+  <div class="footer-links">
+    <a href="#">Features</a>
+    <a href="#">Pricing</a>
+    <a href="#">Docs</a>
+    <a href="#">Blog</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+  </div>
+  <div class="footer-copy">© 2026 PropFlow, Inc. All rights reserved.</div>
+</footer>
+
+<!-- DEMO MODAL -->
+<div class="demo-overlay" id="demoOverlay" onclick="closeDemoIfBg(event)">
+  <div class="demo-modal" style="position:relative">
+    <button class="demo-close" onclick="closeDemo()">✕</button>
+    <div class="demo-icon">🚀</div>
+    <div class="demo-title">TRY PROPFLOW FREE</div>
+    <div class="demo-desc">Start your 14-day free trial — or jump straight into the interactive demo with no sign-up.</div>
+    <div class="demo-form">
+      <input class="demo-input" type="text" placeholder="Your name">
+      <input class="demo-input" type="email" placeholder="Work email">
+      <input class="demo-input" type="text" placeholder="Company / portfolio name">
+      <button class="demo-submit" onclick="startTrial()">Start My Free Trial →</button>
+    </div>
+    <button class="demo-skip" onclick="goToDemo()">Skip — just show me the demo</button>
+  </div>
+</div>
+
+<script>
+// Sticky nav
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// Reveal on scroll
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 60);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(r => observer.observe(r));
+
+// Demo modal
+function openDemo() { document.getElementById('demoOverlay').classList.add('open'); }
+function closeDemo() { document.getElementById('demoOverlay').classList.remove('open'); }
+function closeDemoIfBg(e) { if (e.target === document.getElementById('demoOverlay')) closeDemo(); }
+function startTrial() {
+  closeDemo();
+  window.open('propflow.html', '_blank');
+}
+function goToDemo() {
+  closeDemo();
+  window.open('propflow.html', '_blank');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropFlow — Property Management Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2230;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #3fb950;
+  --accent2: #58a6ff;
+  --accent3: #f78166;
+  --gold: #d29922;
+  --purple: #bc8cff;
+  --sidebar-w: 240px;
+}
+
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;
+  position:sticky;top:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:24px 0;
+  overflow-y:auto;
+  z-index:50;
+}
+.logo{
+  padding:0 20px 28px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:8px;
+}
+.logo-text{
+  font-family:'Instrument Serif',serif;
+  font-size:1.5rem;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.logo-icon{
+  width:32px;height:32px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:0.9rem;
+}
+.logo-badge{
+  font-family:'Sora',sans-serif;font-size:0.6rem;font-weight:600;
+  background:var(--accent);color:#000;
+  padding:2px 6px;border-radius:20px;margin-left:4px;letter-spacing:0.5px;
+}
+
+.nav-section{padding:12px 0}
+.nav-label{
+  font-size:0.65rem;font-weight:600;letter-spacing:1.2px;
+  color:var(--muted);padding:8px 20px 4px;text-transform:uppercase;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 20px;cursor:pointer;
+  color:var(--muted);font-size:0.82rem;font-weight:500;
+  border-left:2px solid transparent;
+  transition:all 0.15s;position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.nav-item.active{
+  background:rgba(63,185,80,0.08);
+  color:var(--accent);border-left-color:var(--accent);
+}
+.nav-icon{font-size:0.9rem;width:18px;text-align:center}
+.nav-badge{
+  margin-left:auto;background:var(--accent3);color:#fff;
+  font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:20px;
+}
+.nav-badge.blue{background:var(--accent2)}
+.nav-badge.gold{background:var(--gold)}
+
+.sidebar-footer{
+  margin-top:auto;padding:16px 20px 0;
+  border-top:1px solid var(--border);
+}
+.user-card{
+  display:flex;align-items:center;gap:10px;padding:10px;
+  background:var(--surface2);border-radius:10px;cursor:pointer;
+  transition:background 0.15s;
+}
+.user-card:hover{background:rgba(255,255,255,0.06)}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#58a6ff,#bc8cff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0;
+}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:0.78rem;font-weight:600;color:var(--text)}
+.user-role{font-size:0.65rem;color:var(--muted)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* TOPBAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;border-bottom:1px solid var(--border);
+  background:var(--bg);position:sticky;top:0;z-index:40;
+}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.page-title{
+  font-family:'Instrument Serif',serif;
+  font-size:1.3rem;color:var(--text);
+}
+.page-subtitle{font-size:0.75rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.search-bar{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:7px 12px;width:220px;
+  transition:border-color 0.2s;
+}
+.search-bar:focus-within{border-color:var(--border2)}
+.search-bar input{
+  background:none;border:none;outline:none;
+  color:var(--text);font-family:'Sora',sans-serif;font-size:0.8rem;width:100%;
+}
+.search-bar input::placeholder{color:var(--muted)}
+.icon-btn{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--muted);font-size:0.9rem;
+  transition:all 0.15s;position:relative;
+}
+.icon-btn:hover{background:var(--surface2);color:var(--text)}
+.notif-dot{
+  position:absolute;top:6px;right:6px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent3);border:2px solid var(--bg);
+}
+.btn{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:8px;
+  font-family:'Sora',sans-serif;font-size:0.78rem;font-weight:600;
+  cursor:pointer;border:none;transition:all 0.15s;
+}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#4fc861}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.btn-outline:hover{background:var(--surface2)}
+
+/* CONTENT AREA */
+.content{flex:1;padding:24px 28px;overflow-y:auto}
+.view{display:none}
+.view.active{display:block}
+
+/* DASHBOARD */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:20px;
+  transition:border-color 0.2s;
+}
+.stat-card:hover{border-color:var(--border2)}
+.stat-label{font-size:0.72rem;color:var(--muted);font-weight:500;letter-spacing:0.3px}
+.stat-value{
+  font-family:'Instrument Serif',serif;
+  font-size:2rem;color:var(--text);margin:6px 0 8px;line-height:1;
+}
+.stat-change{font-size:0.72rem;font-weight:600}
+.stat-change.up{color:var(--accent)}
+.stat-change.down{color:var(--accent3)}
+.stat-icon{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;margin-bottom:12px;
+}
+
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:20px;
+}
+.card-title{
+  font-size:0.82rem;font-weight:600;color:var(--text);
+  margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;
+}
+.card-title-right{font-size:0.72rem;color:var(--accent2);cursor:pointer}
+.card-title-right:hover{text-decoration:underline}
+
+/* CHART BAR */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:100px}
+.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px}
+.bar{
+  width:100%;border-radius:4px 4px 0 0;
+  background:linear-gradient(180deg,var(--accent2),rgba(88,166,255,0.3));
+  transition:height 0.3s ease;
+}
+.bar.green{background:linear-gradient(180deg,var(--accent),rgba(63,185,80,0.3))}
+.bar-label{font-size:0.6rem;color:var(--muted)}
+
+/* TABLES */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{
+  font-size:0.65rem;font-weight:600;letter-spacing:0.8px;
+  text-transform:uppercase;color:var(--muted);
+  padding:10px 12px;text-align:left;
+  border-bottom:1px solid var(--border);
+}
+td{
+  padding:11px 12px;font-size:0.78rem;
+  border-bottom:1px solid var(--border);color:var(--text);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.status{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;font-size:0.68rem;font-weight:600;
+}
+.status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.7}
+.status.green{color:var(--accent);background:rgba(63,185,80,0.1)}
+.status.red{color:var(--accent3);background:rgba(247,129,102,0.1)}
+.status.yellow{color:var(--gold);background:rgba(210,153,34,0.1)}
+.status.blue{color:var(--accent2);background:rgba(88,166,255,0.1)}
+.status.purple{color:var(--purple);background:rgba(188,140,255,0.1)}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;justify-content:center;margin:8px 0}
+.donut{
+  width:100px;height:100px;border-radius:50%;
+  background:conic-gradient(
+    var(--accent) 0% 78%,
+    var(--gold) 78% 89%,
+    var(--accent3) 89% 100%
+  );
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.donut::after{
+  content:'';position:absolute;
+  width:64px;height:64px;border-radius:50%;background:var(--surface);
+}
+.donut-label{
+  position:absolute;z-index:1;
+  text-align:center;
+  font-family:'Instrument Serif',serif;font-size:1.2rem;
+}
+.legend{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:0.72rem}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ACTIVITY */
+.activity-list{display:flex;flex-direction:column;gap:0}
+.activity-item{
+  display:flex;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.activity-item:last-child{border-bottom:none}
+.activity-avatar{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.75rem;font-weight:700;flex-shrink:0;
+}
+.activity-text{flex:1;font-size:0.75rem;color:var(--muted);line-height:1.5}
+.activity-text strong{color:var(--text);font-weight:600}
+.activity-time{font-size:0.65rem;color:var(--muted);margin-top:2px}
+
+/* PROPERTIES VIEW */
+.properties-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.property-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;cursor:pointer;
+  transition:all 0.2s;
+}
+.property-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.property-img{
+  height:140px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;
+  position:relative;overflow:hidden;
+}
+.property-img::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.5));
+}
+.property-img-label{
+  position:absolute;bottom:10px;left:12px;
+  font-size:0.65rem;font-weight:700;letter-spacing:0.8px;
+  text-transform:uppercase;color:rgba(255,255,255,0.8);
+}
+.property-body{padding:14px}
+.property-name{font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.property-address{font-size:0.72rem;color:var(--muted);margin-bottom:12px}
+.property-stats{display:flex;gap:16px}
+.property-stat{font-size:0.7rem;color:var(--muted)}
+.property-stat span{display:block;font-size:0.85rem;font-weight:600;color:var(--text)}
+.property-footer{
+  padding:12px 14px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.occ-bar{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;margin:0 10px}
+.occ-fill{height:100%;border-radius:4px;background:var(--accent)}
+
+/* TENANTS */
+.tenants-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.filter-tabs{display:flex;gap:4px}
+.filter-tab{
+  padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:500;
+  cursor:pointer;color:var(--muted);transition:all 0.15s;
+}
+.filter-tab.active{background:var(--surface2);color:var(--text)}
+.filter-tab:hover:not(.active){color:var(--text)}
+.tenant-row td:first-child{font-weight:600}
+.tenant-unit{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  background:rgba(88,166,255,0.1);color:var(--accent2);
+  font-size:0.7rem;font-weight:600;
+}
+
+/* MAINTENANCE */
+.maint-list{display:flex;flex-direction:column;gap:12px}
+.maint-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:16px;
+  display:flex;align-items:flex-start;gap:14px;
+  cursor:pointer;transition:border-color 0.15s;
+}
+.maint-card:hover{border-color:var(--border2)}
+.maint-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;flex-shrink:0;
+}
+.maint-body{flex:1}
+.maint-title{font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.maint-meta{font-size:0.72rem;color:var(--muted)}
+.maint-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.priority-badge{
+  padding:3px 8px;border-radius:20px;font-size:0.65rem;font-weight:700;
+}
+.priority-badge.high{background:rgba(247,129,102,0.15);color:var(--accent3)}
+.priority-badge.medium{background:rgba(210,153,34,0.15);color:var(--gold)}
+.priority-badge.low{background:rgba(63,185,80,0.15);color:var(--accent)}
+
+/* ACCOUNTING */
+.ledger-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;
+}
+.date-select{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-family:'Sora',sans-serif;font-size:0.75rem;
+  padding:7px 10px;border-radius:8px;outline:none;
+}
+.finance-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.finance-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:16px;
+}
+.finance-label{font-size:0.7rem;color:var(--muted);margin-bottom:8px}
+.finance-amount{
+  font-family:'Instrument Serif',serif;font-size:1.6rem;color:var(--text);
+}
+.finance-sub{font-size:0.7rem;color:var(--muted);margin-top:4px}
+.income-row td{color:var(--accent)}
+.expense-row td{color:var(--accent3)}
+
+/* LEASING */
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.pipeline-col{background:var(--surface);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.pipeline-header{
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  font-size:0.75rem;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.pipeline-count{
+  width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;font-weight:700;
+}
+.pipeline-items{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.lead-card{
+  background:var(--surface2);border-radius:8px;padding:10px;
+  cursor:pointer;transition:all 0.15s;
+}
+.lead-card:hover{background:rgba(255,255,255,0.06)}
+.lead-name{font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:2px}
+.lead-meta{font-size:0.68rem;color:var(--muted)}
+.lead-date{font-size:0.65rem;color:var(--muted);margin-top:6px}
+
+/* REPORTS */
+.reports-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.report-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:18px;cursor:pointer;
+  transition:all 0.2s;display:flex;align-items:flex-start;gap:12px;
+}
+.report-card:hover{border-color:var(--border2);background:var(--surface2)}
+.report-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;
+}
+.report-name{font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.report-desc{font-size:0.71rem;color:var(--muted);line-height:1.4}
+
+/* MODAL */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:200;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;width:480px;max-width:95vw;
+  padding:28px;animation:slideUp 0.25s ease;
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{
+  font-family:'Instrument Serif',serif;font-size:1.2rem;color:var(--text);
+  margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;
+}
+.modal-close{cursor:pointer;color:var(--muted);font-size:1rem;transition:color 0.15s}
+.modal-close:hover{color:var(--text)}
+.form-group{margin-bottom:14px}
+.form-label{font-size:0.72rem;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;letter-spacing:0.3px}
+.form-input,.form-select{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;
+  color:var(--text);font-family:'Sora',sans-serif;font-size:0.8rem;
+  outline:none;transition:border-color 0.2s;
+}
+.form-input:focus,.form-select:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:10px;padding:12px 16px;
+  font-size:0.78rem;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+  animation:toastIn 0.3s ease;
+  min-width:240px;
+}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast-icon{font-size:1rem}
+.toast.success{border-left:3px solid var(--accent)}
+.toast.error{border-left:3px solid var(--accent3)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.view.active{animation:fadeIn 0.25s ease}
+
+/* RESPONSIVE-ISH */
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:20px;font-size:0.68rem;font-weight:600;
+  background:rgba(255,255,255,0.06);color:var(--muted);
+}
+
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--muted);
+}
+.empty-state-icon{font-size:2.5rem;margin-bottom:12px}
+.empty-state p{font-size:0.82rem}
+
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.section-title{
+  font-family:'Instrument Serif',serif;font-size:1.05rem;color:var(--text);
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-text">
+      <div class="logo-icon">🏢</div>
+      PropFlow<span class="logo-badge">BETA</span>
+    </div>
+  </div>
+
+  <nav class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="showView('dashboard',this)">
+      <span class="nav-icon">⊞</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showView('analytics',this)">
+      <span class="nav-icon">📈</span> Analytics
+    </div>
+  </nav>
+
+  <nav class="nav-section">
+    <div class="nav-label">Management</div>
+    <div class="nav-item" onclick="showView('properties',this)">
+      <span class="nav-icon">🏠</span> Properties
+    </div>
+    <div class="nav-item" onclick="showView('tenants',this)">
+      <span class="nav-icon">👥</span> Tenants
+    </div>
+    <div class="nav-item" onclick="showView('leasing',this)">
+      <span class="nav-icon">📝</span> Leasing<span class="nav-badge blue">7</span>
+    </div>
+    <div class="nav-item" onclick="showView('maintenance',this)">
+      <span class="nav-icon">🔧</span> Maintenance<span class="nav-badge">4</span>
+    </div>
+  </nav>
+
+  <nav class="nav-section">
+    <div class="nav-label">Finance</div>
+    <div class="nav-item" onclick="showView('accounting',this)">
+      <span class="nav-icon">💰</span> Accounting
+    </div>
+    <div class="nav-item" onclick="showView('reports',this)">
+      <span class="nav-icon">📊</span> Reports
+    </div>
+  </nav>
+
+  <nav class="nav-section">
+    <div class="nav-label">Communications</div>
+    <div class="nav-item" onclick="showView('messages',this)">
+      <span class="nav-icon">💬</span> Messages<span class="nav-badge gold">3</span>
+    </div>
+    <div class="nav-item" onclick="showView('settings',this)">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">JD</div>
+      <div class="user-info">
+        <div class="user-name">Jordan Davis</div>
+        <div class="user-role">Portfolio Manager</div>
+      </div>
+      <span style="color:var(--muted);font-size:0.8rem">⋯</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-subtitle" id="page-subtitle">Welcome back, Jordan — here's your portfolio overview</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-bar">
+        <span style="color:var(--muted);font-size:0.8rem">🔍</span>
+        <input placeholder="Search properties, tenants…">
+      </div>
+      <div class="icon-btn">
+        🔔<div class="notif-dot"></div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">＋ Add New</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD VIEW -->
+    <div class="view active" id="view-dashboard">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(63,185,80,0.12);color:var(--accent)">🏠</div>
+          <div class="stat-label">Total Units</div>
+          <div class="stat-value">248</div>
+          <div class="stat-change up">↑ 12 from last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(88,166,255,0.12);color:var(--accent2)">💵</div>
+          <div class="stat-label">Monthly Revenue</div>
+          <div class="stat-value">$91.4k</div>
+          <div class="stat-change up">↑ 4.2% vs last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(210,153,34,0.12);color:var(--gold)">📊</div>
+          <div class="stat-label">Occupancy Rate</div>
+          <div class="stat-value">94.1%</div>
+          <div class="stat-change up">↑ 1.3% this quarter</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(247,129,102,0.12);color:var(--accent3)">⚠️</div>
+          <div class="stat-label">Open Maintenance</div>
+          <div class="stat-value">14</div>
+          <div class="stat-change down">↑ 3 new requests</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Revenue Chart -->
+        <div class="card">
+          <div class="card-title">
+            Revenue Overview
+            <span class="card-title-right">View All →</span>
+          </div>
+          <div style="margin-bottom:6px">
+            <span style="font-family:'Instrument Serif',serif;font-size:1.5rem;color:var(--text)">$91,420</span>
+            <span style="font-size:0.72rem;color:var(--accent);margin-left:8px">↑ 4.2%</span>
+          </div>
+          <div style="font-size:0.7rem;color:var(--muted);margin-bottom:16px">February 2026</div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:55%"></div><div class="bar-label">Sep</div></div>
+            <div class="bar-col"><div class="bar" style="height:62%"></div><div class="bar-label">Oct</div></div>
+            <div class="bar-col"><div class="bar" style="height:58%"></div><div class="bar-label">Nov</div></div>
+            <div class="bar-col"><div class="bar" style="height:70%"></div><div class="bar-label">Dec</div></div>
+            <div class="bar-col"><div class="bar" style="height:65%"></div><div class="bar-label">Jan</div></div>
+            <div class="bar-col"><div class="bar green" style="height:100%"></div><div class="bar-label">Feb</div></div>
+          </div>
+        </div>
+
+        <!-- Occupancy Donut -->
+        <div class="card">
+          <div class="card-title">Occupancy Breakdown</div>
+          <div class="donut-wrap">
+            <div class="donut">
+              <div class="donut-label">94%</div>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:var(--accent)"></div>
+              <span style="color:var(--muted)">Occupied</span>
+              <span style="margin-left:auto;font-weight:600;color:var(--text)">233 units</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:var(--gold)"></div>
+              <span style="color:var(--muted)">Notice</span>
+              <span style="margin-left:auto;font-weight:600;color:var(--text)">10 units</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:var(--accent3)"></div>
+              <span style="color:var(--muted)">Vacant</span>
+              <span style="margin-left:auto;font-weight:600;color:var(--text)">5 units</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Recent Payments -->
+        <div class="card">
+          <div class="card-title">
+            Recent Payments
+            <span class="card-title-right" onclick="showView('accounting',document.querySelector('[onclick*=accounting]'))">View All →</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tenant</th><th>Unit</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Aaliyah Morris</td><td><span class="tenant-unit">4B</span></td><td>$1,850</td><td><span class="status green">Paid</span></td></tr>
+                <tr><td>Carlos Reyes</td><td><span class="tenant-unit">7A</span></td><td>$2,100</td><td><span class="status green">Paid</span></td></tr>
+                <tr><td>Sophie Chen</td><td><span class="tenant-unit">2C</span></td><td>$1,650</td><td><span class="status yellow">Pending</span></td></tr>
+                <tr><td>Marcus Webb</td><td><span class="tenant-unit">9D</span></td><td>$1,975</td><td><span class="status red">Overdue</span></td></tr>
+                <tr><td>Elena Petrov</td><td><span class="tenant-unit">1A</span></td><td>$2,200</td><td><span class="status green">Paid</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="card">
+          <div class="card-title">Recent Activity</div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-avatar" style="background:rgba(63,185,80,0.15);color:var(--accent)">💵</div>
+              <div>
+                <div class="activity-text"><strong>Rent received</strong> from Aaliyah Morris — Unit 4B</div>
+                <div class="activity-time">2 min ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-avatar" style="background:rgba(247,129,102,0.15);color:var(--accent3)">🔧</div>
+              <div>
+                <div class="activity-text"><strong>Maintenance request</strong> submitted — Unit 3C (HVAC)</div>
+                <div class="activity-time">1 hr ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-avatar" style="background:rgba(88,166,255,0.15);color:var(--accent2)">📝</div>
+              <div>
+                <div class="activity-text"><strong>Lease signed</strong> by Marcus Webb — move-in Mar 1</div>
+                <div class="activity-time">3 hr ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-avatar" style="background:rgba(210,153,34,0.15);color:var(--gold)">📋</div>
+              <div>
+                <div class="activity-text"><strong>Inspection completed</strong> — 412 Oak Ave, Unit 8</div>
+                <div class="activity-time">Yesterday</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-avatar" style="background:rgba(188,140,255,0.15);color:var(--purple)">👤</div>
+              <div>
+                <div class="activity-text"><strong>New applicant</strong> — Sofia Nguyen applied for Unit 5D</div>
+                <div class="activity-time">Yesterday</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPERTIES VIEW -->
+    <div class="view" id="view-properties">
+      <div class="section-header">
+        <div class="section-title">All Properties</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline">🗺 Map View</button>
+          <button class="btn btn-primary" onclick="openModal('property')">＋ Add Property</button>
+        </div>
+      </div>
+      <div class="properties-grid">
+        <div class="property-card">
+          <div class="property-img" style="background:linear-gradient(135deg,#1a2a3a,#0d1117)">🏢
+            <div class="property-img-label">Multifamily</div>
+          </div>
+          <div class="property-body">
+            <div class="property-name">Riverside Apartments</div>
+            <div class="property-address">412 Oak Ave, San Francisco, CA 94102</div>
+            <div class="property-stats">
+              <div class="property-stat"><span>48</span>Units</div>
+              <div class="property-stat"><span>$4,200</span>Avg Rent</div>
+              <div class="property-stat"><span style="color:var(--accent)">96%</span>Occupied</div>
+            </div>
+          </div>
+          <div class="property-footer">
+            <span style="font-size:0.68rem;color:var(--muted)">96%</span>
+            <div class="occ-bar"><div class="occ-fill" style="width:96%"></div></div>
+            <span class="status green">Active</span>
+          </div>
+        </div>
+        <div class="property-card">
+          <div class="property-img" style="background:linear-gradient(135deg,#2a1a0d,#1a0d05)">🏠
+            <div class="property-img-label">Single Family</div>
+          </div>
+          <div class="property-body">
+            <div class="property-name">Maple Grove Homes</div>
+            <div class="property-address">789 Maple St, Oakland, CA 94607</div>
+            <div class="property-stats">
+              <div class="property-stat"><span>24</span>Units</div>
+              <div class="property-stat"><span>$3,100</span>Avg Rent</div>
+              <div class="property-stat"><span style="color:var(--gold)">88%</span>Occupied</div>
+            </div>
+          </div>
+          <div class="property-footer">
+            <span style="font-size:0.68rem;color:var(--muted)">88%</span>
+            <div class="occ-bar"><div class="occ-fill" style="width:88%;background:var(--gold)"></div></div>
+            <span class="status yellow">Partial</span>
+          </div>
+        </div>
+        <div class="property-card">
+          <div class="property-img" style="background:linear-gradient(135deg,#0d2a1a,#051a0d)">🏗️
+            <div class="property-img-label">Commercial</div>
+          </div>
+          <div class="property-body">
+            <div class="property-name">Downtown Plaza</div>
+            <div class="property-address">100 Market St, San Jose, CA 95113</div>
+            <div class="property-stats">
+              <div class="property-stat"><span>16</span>Units</div>
+              <div class="property-stat"><span>$6,800</span>Avg Rent</div>
+              <div class="property-stat"><span style="color:var(--accent)">100%</span>Occupied</div>
+            </div>
+          </div>
+          <div class="property-footer">
+            <span style="font-size:0.68rem;color:var(--muted)">100%</span>
+            <div class="occ-bar"><div class="occ-fill" style="width:100%"></div></div>
+            <span class="status green">Active</span>
+          </div>
+        </div>
+        <div class="property-card">
+          <div class="property-img" style="background:linear-gradient(135deg,#2a1a2a,#1a0d1a)">🎓
+            <div class="property-img-label">Student Housing</div>
+          </div>
+          <div class="property-body">
+            <div class="property-name">University Flats</div>
+            <div class="property-address">55 Campus Dr, Berkeley, CA 94720</div>
+            <div class="property-stats">
+              <div class="property-stat"><span>80</span>Units</div>
+              <div class="property-stat"><span>$2,400</span>Avg Rent</div>
+              <div class="property-stat"><span style="color:var(--accent)">98%</span>Occupied</div>
+            </div>
+          </div>
+          <div class="property-footer">
+            <span style="font-size:0.68rem;color:var(--muted)">98%</span>
+            <div class="occ-bar"><div class="occ-fill" style="width:98%"></div></div>
+            <span class="status green">Active</span>
+          </div>
+        </div>
+        <div class="property-card">
+          <div class="property-img" style="background:linear-gradient(135deg,#0d1a2a,#050d1a)">🌊
+            <div class="property-img-label">Multifamily</div>
+          </div>
+          <div class="property-body">
+            <div class="property-name">Harbor View Condos</div>
+            <div class="property-address">320 Marina Blvd, San Francisco, CA 94123</div>
+            <div class="property-stats">
+              <div class="property-stat"><span>36</span>Units</div>
+              <div class="property-stat"><span>$5,500</span>Avg Rent</div>
+              <div class="property-stat"><span style="color:var(--accent)">94%</span>Occupied</div>
+            </div>
+          </div>
+          <div class="property-footer">
+            <span style="font-size:0.68rem;color:var(--muted)">94%</span>
+            <div class="occ-bar"><div class="occ-fill" style="width:94%"></div></div>
+            <span class="status green">Active</span>
+          </div>
+        </div>
+        <div class="property-card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:200px;cursor:pointer;" onclick="openModal('property')">
+          <div style="text-align:center;color:var(--muted)">
+            <div style="font-size:2rem;margin-bottom:8px">＋</div>
+            <div style="font-size:0.8rem;font-weight:600">Add Property</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TENANTS VIEW -->
+    <div class="view" id="view-tenants">
+      <div class="tenants-header">
+        <div class="section-title">Tenants</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="filter-tabs">
+            <div class="filter-tab active">All</div>
+            <div class="filter-tab" onclick="filterTabs(this)">Current</div>
+            <div class="filter-tab" onclick="filterTabs(this)">Notice</div>
+            <div class="filter-tab" onclick="filterTabs(this)">Past</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('tenant')">＋ Add Tenant</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Tenant</th><th>Unit</th><th>Property</th><th>Lease End</th><th>Rent</th><th>Balance</th><th>Status</th></tr>
+            </thead>
+            <tbody class="tenant-row">
+              <tr><td>Aaliyah Morris</td><td><span class="tenant-unit">4B</span></td><td>Riverside Apts</td><td>Aug 31, 2026</td><td>$1,850</td><td style="color:var(--accent)">$0.00</td><td><span class="status green">Current</span></td></tr>
+              <tr><td>Carlos Reyes</td><td><span class="tenant-unit">7A</span></td><td>Harbor View</td><td>Dec 31, 2026</td><td>$2,100</td><td style="color:var(--accent)">$0.00</td><td><span class="status green">Current</span></td></tr>
+              <tr><td>Sophie Chen</td><td><span class="tenant-unit">2C</span></td><td>Riverside Apts</td><td>Jun 30, 2026</td><td>$1,650</td><td style="color:var(--gold)">$1,650.00</td><td><span class="status yellow">Pending</span></td></tr>
+              <tr><td>Marcus Webb</td><td><span class="tenant-unit">9D</span></td><td>Maple Grove</td><td>Mar 31, 2026</td><td>$1,975</td><td style="color:var(--accent3)">$3,950.00</td><td><span class="status red">Overdue</span></td></tr>
+              <tr><td>Elena Petrov</td><td><span class="tenant-unit">1A</span></td><td>Downtown Plaza</td><td>Sep 30, 2026</td><td>$2,200</td><td style="color:var(--accent)">$0.00</td><td><span class="status green">Current</span></td></tr>
+              <tr><td>James Liu</td><td><span class="tenant-unit">5C</span></td><td>University Flats</td><td>May 31, 2026</td><td>$1,200</td><td style="color:var(--accent)">$0.00</td><td><span class="status green">Current</span></td></tr>
+              <tr><td>Natalie Brooks</td><td><span class="tenant-unit">3F</span></td><td>Riverside Apts</td><td>Mar 15, 2026</td><td>$1,900</td><td style="color:var(--accent)">$0.00</td><td><span class="status yellow">Notice</span></td></tr>
+              <tr><td>David Kim</td><td><span class="tenant-unit">8B</span></td><td>Harbor View</td><td>Jul 31, 2026</td><td>$2,400</td><td style="color:var(--accent)">$0.00</td><td><span class="status green">Current</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAINTENANCE VIEW -->
+    <div class="view" id="view-maintenance">
+      <div class="section-header">
+        <div class="section-title">Maintenance Requests</div>
+        <button class="btn btn-primary" onclick="openModal('maintenance')">＋ New Request</button>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px">
+        <div class="stat-card" style="flex:1;padding:14px">
+          <div class="stat-label">Open</div>
+          <div class="stat-value" style="font-size:1.5rem;color:var(--accent3)">4</div>
+        </div>
+        <div class="stat-card" style="flex:1;padding:14px">
+          <div class="stat-label">In Progress</div>
+          <div class="stat-value" style="font-size:1.5rem;color:var(--gold)">6</div>
+        </div>
+        <div class="stat-card" style="flex:1;padding:14px">
+          <div class="stat-label">Completed (MTD)</div>
+          <div class="stat-value" style="font-size:1.5rem;color:var(--accent)">18</div>
+        </div>
+        <div class="stat-card" style="flex:1;padding:14px">
+          <div class="stat-label">Avg Resolution</div>
+          <div class="stat-value" style="font-size:1.5rem">2.4d</div>
+        </div>
+      </div>
+      <div class="maint-list">
+        <div class="maint-card">
+          <div class="maint-icon" style="background:rgba(247,129,102,0.12);color:var(--accent3)">❄️</div>
+          <div class="maint-body">
+            <div class="maint-title">HVAC not cooling — Unit 3C</div>
+            <div class="maint-meta">Riverside Apartments · Submitted by Sophie Chen · Feb 24, 2026</div>
+          </div>
+          <div class="maint-actions">
+            <span class="priority-badge high">High</span>
+            <span class="status red">Open</span>
+          </div>
+        </div>
+        <div class="maint-card">
+          <div class="maint-icon" style="background:rgba(88,166,255,0.12);color:var(--accent2)">🚿</div>
+          <div class="maint-body">
+            <div class="maint-title">Leaking faucet in bathroom — Unit 7A</div>
+            <div class="maint-meta">Harbor View Condos · Submitted by Carlos Reyes · Feb 22, 2026</div>
+          </div>
+          <div class="maint-actions">
+            <span class="priority-badge medium">Medium</span>
+            <span class="status yellow">In Progress</span>
+          </div>
+        </div>
+        <div class="maint-card">
+          <div class="maint-icon" style="background:rgba(210,153,34,0.12);color:var(--gold)">🔌</div>
+          <div class="maint-body">
+            <div class="maint-title">Outlet not working in living room — Unit 1A</div>
+            <div class="maint-meta">Downtown Plaza · Submitted by Elena Petrov · Feb 20, 2026</div>
+          </div>
+          <div class="maint-actions">
+            <span class="priority-badge medium">Medium</span>
+            <span class="status yellow">In Progress</span>
+          </div>
+        </div>
+        <div class="maint-card">
+          <div class="maint-icon" style="background:rgba(63,185,80,0.12);color:var(--accent)">🚪</div>
+          <div class="maint-body">
+            <div class="maint-title">Door lock replacement needed — Unit 5C</div>
+            <div class="maint-meta">University Flats · Submitted by James Liu · Feb 18, 2026</div>
+          </div>
+          <div class="maint-actions">
+            <span class="priority-badge low">Low</span>
+            <span class="status red">Open</span>
+          </div>
+        </div>
+        <div class="maint-card">
+          <div class="maint-icon" style="background:rgba(63,185,80,0.12);color:var(--accent)">🖼️</div>
+          <div class="maint-body">
+            <div class="maint-title">Ceiling paint peeling — Unit 8B</div>
+            <div class="maint-meta">Harbor View Condos · Submitted by David Kim · Feb 15, 2026</div>
+          </div>
+          <div class="maint-actions">
+            <span class="priority-badge low">Low</span>
+            <span class="status green">Completed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEASING VIEW -->
+    <div class="view" id="view-leasing">
+      <div class="section-header">
+        <div class="section-title">Leasing Pipeline</div>
+        <button class="btn btn-primary" onclick="openModal('lead')">＋ Add Lead</button>
+      </div>
+      <div class="pipeline">
+        <div class="pipeline-col">
+          <div class="pipeline-header" style="color:var(--muted)">
+            Inquiries <div class="pipeline-count" style="background:rgba(139,148,158,0.15)">4</div>
+          </div>
+          <div class="pipeline-items">
+            <div class="lead-card">
+              <div class="lead-name">Sofia Nguyen</div>
+              <div class="lead-meta">Unit 5D · $2,200/mo</div>
+              <div class="lead-date">Inquired Feb 23</div>
+            </div>
+            <div class="lead-card">
+              <div class="lead-name">Tyler Johnson</div>
+              <div class="lead-meta">Unit 2A · $1,800/mo</div>
+              <div class="lead-date">Inquired Feb 22</div>
+            </div>
+            <div class="lead-card">
+              <div class="lead-name">Aisha Patel</div>
+              <div class="lead-meta">Unit 6C · $1,950/mo</div>
+              <div class="lead-date">Inquired Feb 20</div>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline-col">
+          <div class="pipeline-header" style="color:var(--accent2)">
+            Applications <div class="pipeline-count" style="background:rgba(88,166,255,0.15);color:var(--accent2)">3</div>
+          </div>
+          <div class="pipeline-items">
+            <div class="lead-card">
+              <div class="lead-name">Jordan Matthews</div>
+              <div class="lead-meta">Unit 4A · $2,050/mo</div>
+              <div class="lead-date">Applied Feb 21</div>
+            </div>
+            <div class="lead-card">
+              <div class="lead-name">Priya Singh</div>
+              <div class="lead-meta">Unit 1B · $1,750/mo</div>
+              <div class="lead-date">Applied Feb 19</div>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline-col">
+          <div class="pipeline-header" style="color:var(--gold)">
+            Screening <div class="pipeline-count" style="background:rgba(210,153,34,0.15);color:var(--gold)">2</div>
+          </div>
+          <div class="pipeline-items">
+            <div class="lead-card">
+              <div class="lead-name">Ben Carter</div>
+              <div class="lead-meta">Unit 9B · $2,300/mo</div>
+              <div class="lead-date">Screening since Feb 18</div>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline-col">
+          <div class="pipeline-header" style="color:var(--accent)">
+            Approved <div class="pipeline-count" style="background:rgba(63,185,80,0.15);color:var(--accent)">2</div>
+          </div>
+          <div class="pipeline-items">
+            <div class="lead-card">
+              <div class="lead-name">Marcus Webb</div>
+              <div class="lead-meta">Unit 9D · $1,975/mo</div>
+              <div class="lead-date">Move-in Mar 1 ✓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px">
+        <div class="card-title" style="margin-bottom:16px">Expiring Leases (Next 90 Days)</div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tenant</th><th>Unit</th><th>Property</th><th>Lease End</th><th>Renewal Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td>Marcus Webb</td><td><span class="tenant-unit">9D</span></td><td>Maple Grove</td><td>Mar 31, 2026</td><td><span class="status yellow">Not Contacted</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:0.7rem">Send Notice</button></td></tr>
+                <tr><td>Natalie Brooks</td><td><span class="tenant-unit">3F</span></td><td>Riverside Apts</td><td>Mar 15, 2026</td><td><span class="status red">Vacating</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:0.7rem">Post Listing</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTING VIEW -->
+    <div class="view" id="view-accounting">
+      <div class="ledger-header">
+        <div class="section-title">Accounting & Financials</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select class="date-select">
+            <option>February 2026</option>
+            <option>January 2026</option>
+            <option>December 2025</option>
+          </select>
+          <button class="btn btn-outline">⬇ Export</button>
+          <button class="btn btn-primary" onclick="openModal('transaction')">＋ Transaction</button>
+        </div>
+      </div>
+
+      <div class="finance-grid">
+        <div class="finance-card">
+          <div class="finance-label">Gross Revenue</div>
+          <div class="finance-amount" style="color:var(--accent)">$91,420</div>
+          <div class="finance-sub">↑ 4.2% vs last month</div>
+        </div>
+        <div class="finance-card">
+          <div class="finance-label">Operating Expenses</div>
+          <div class="finance-amount" style="color:var(--accent3)">$18,760</div>
+          <div class="finance-sub">↓ 2.1% vs last month</div>
+        </div>
+        <div class="finance-card">
+          <div class="finance-label">Net Operating Income</div>
+          <div class="finance-amount">$72,660</div>
+          <div class="finance-sub">NOI Margin: 79.5%</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">General Ledger — February 2026</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Property</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+            <tbody>
+              <tr class="income-row"><td>Feb 1</td><td>Rent — Aaliyah Morris (4B)</td><td><span class="chip">Rent</span></td><td>Riverside</td><td>—</td><td>$1,850</td><td>$1,850</td></tr>
+              <tr class="income-row"><td>Feb 1</td><td>Rent — Carlos Reyes (7A)</td><td><span class="chip">Rent</span></td><td>Harbor View</td><td>—</td><td>$2,100</td><td>$3,950</td></tr>
+              <tr class="income-row"><td>Feb 1</td><td>Rent — Elena Petrov (1A)</td><td><span class="chip">Rent</span></td><td>Downtown</td><td>—</td><td>$2,200</td><td>$6,150</td></tr>
+              <tr class="expense-row"><td>Feb 5</td><td>Plumbing repair — Unit 2B</td><td><span class="chip">Maintenance</span></td><td>Riverside</td><td>$480</td><td>—</td><td>$5,670</td></tr>
+              <tr class="expense-row"><td>Feb 8</td><td>Property insurance premium</td><td><span class="chip">Insurance</span></td><td>All</td><td>$3,200</td><td>—</td><td>$2,470</td></tr>
+              <tr class="income-row"><td>Feb 10</td><td>Late fee — Marcus Webb</td><td><span class="chip">Fees</span></td><td>Maple Grove</td><td>—</td><td>$150</td><td>$2,620</td></tr>
+              <tr class="expense-row"><td>Feb 12</td><td>Landscaping service</td><td><span class="chip">Landscaping</span></td><td>Maple Grove</td><td>$750</td><td>—</td><td>$1,870</td></tr>
+              <tr class="income-row"><td>Feb 15</td><td>Parking fee — Multiple</td><td><span class="chip">Parking</span></td><td>Riverside</td><td>—</td><td>$1,200</td><td>$3,070</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS VIEW -->
+    <div class="view" id="view-reports">
+      <div class="section-header">
+        <div class="section-title">Reports & Insights</div>
+        <button class="btn btn-outline">📅 Schedule Report</button>
+      </div>
+      <div class="reports-grid">
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(63,185,80,0.12);color:var(--accent)">📈</div>
+          <div>
+            <div class="report-name">Income Statement</div>
+            <div class="report-desc">Revenue, expenses, and net income by property or portfolio-wide.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(88,166,255,0.12);color:var(--accent2)">🏠</div>
+          <div>
+            <div class="report-name">Occupancy Report</div>
+            <div class="report-desc">Vacancy rates, average days vacant, and turnover trends.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(210,153,34,0.12);color:var(--gold)">💰</div>
+          <div>
+            <div class="report-name">Rent Roll</div>
+            <div class="report-desc">All active leases, rent amounts, and lease expiration dates.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(247,129,102,0.12);color:var(--accent3)">🔧</div>
+          <div>
+            <div class="report-name">Maintenance Summary</div>
+            <div class="report-desc">Open, in-progress, and completed work orders with cost tracking.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(188,140,255,0.12);color:var(--purple)">📊</div>
+          <div>
+            <div class="report-name">Cash Flow Statement</div>
+            <div class="report-desc">Operating, investing, and financing cash flows by period.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(63,185,80,0.12);color:var(--accent)">🧾</div>
+          <div>
+            <div class="report-name">Owner Statement</div>
+            <div class="report-desc">Monthly financial summaries formatted for property owners.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(88,166,255,0.12);color:var(--accent2)">📋</div>
+          <div>
+            <div class="report-name">Delinquency Report</div>
+            <div class="report-desc">Tenants with outstanding balances and aging receivables.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(210,153,34,0.12);color:var(--gold)">📝</div>
+          <div>
+            <div class="report-name">Lease Expiration</div>
+            <div class="report-desc">Upcoming expirations, renewal opportunities, and vacancy risk.</div>
+          </div>
+        </div>
+        <div class="report-card">
+          <div class="report-icon" style="background:rgba(247,129,102,0.12);color:var(--accent3)">🏦</div>
+          <div>
+            <div class="report-name">Bank Reconciliation</div>
+            <div class="report-desc">Match transactions against bank statements with variance analysis.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES VIEW -->
+    <div class="view" id="view-messages">
+      <div class="section-header">
+        <div class="section-title">Messages</div>
+        <button class="btn btn-primary">✉️ Compose</button>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="padding:0">
+          <div style="padding:14px;border-bottom:1px solid var(--border);font-size:0.78rem;font-weight:600">Inbox (3 unread)</div>
+          <div>
+            <div style="padding:14px;border-bottom:1px solid var(--border);cursor:pointer;background:rgba(63,185,80,0.04)">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:0.8rem;font-weight:700">Sophie Chen</span>
+                <span style="font-size:0.65rem;color:var(--muted)">10:24 AM</span>
+              </div>
+              <div style="font-size:0.73rem;color:var(--muted)">RE: February rent payment</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--accent2);margin-top:4px"></div>
+            </div>
+            <div style="padding:14px;border-bottom:1px solid var(--border);cursor:pointer;background:rgba(63,185,80,0.04)">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:0.8rem;font-weight:700">Marcus Webb</span>
+                <span style="font-size:0.65rem;color:var(--muted)">Yesterday</span>
+              </div>
+              <div style="font-size:0.73rem;color:var(--muted)">Question about lease renewal options</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--accent2);margin-top:4px"></div>
+            </div>
+            <div style="padding:14px;border-bottom:1px solid var(--border);cursor:pointer">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:0.8rem;font-weight:600">Natalie Brooks</span>
+                <span style="font-size:0.65rem;color:var(--muted)">Feb 22</span>
+              </div>
+              <div style="font-size:0.73rem;color:var(--muted)">Move-out inspection scheduling</div>
+            </div>
+            <div style="padding:14px;cursor:pointer">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:0.8rem;font-weight:600">Aaliyah Morris</span>
+                <span style="font-size:0.65rem;color:var(--muted)">Feb 20</span>
+              </div>
+              <div style="font-size:0.73rem;color:var(--muted)">Guest parking pass request</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column">
+          <div style="padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px">
+            <div style="font-size:0.9rem;font-weight:600;color:var(--text)">Sophie Chen — Unit 2C</div>
+            <div style="font-size:0.72rem;color:var(--muted)">RE: February rent payment</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+            <div style="display:flex;gap:10px">
+              <div class="avatar" style="width:28px;height:28px;font-size:0.65rem;flex-shrink:0">SC</div>
+              <div style="background:var(--surface2);border-radius:0 10px 10px 10px;padding:10px 12px;font-size:0.78rem;color:var(--text);max-width:80%">
+                Hi, I wanted to let you know my payment will be a few days late this month due to a bank transfer delay. It should clear by Feb 27. Sorry for the inconvenience!
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+              <div style="background:rgba(63,185,80,0.12);border-radius:10px 0 10px 10px;padding:10px 12px;font-size:0.78rem;color:var(--text);max-width:80%">
+                Thanks for letting us know, Sophie! No problem at all. I'll make a note. Please make sure it's in by the 27th to avoid any late fee.
+              </div>
+              <div class="avatar" style="width:28px;height:28px;font-size:0.65rem;flex-shrink:0">JD</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" placeholder="Type a message…" style="flex:1">
+            <button class="btn btn-primary">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS VIEW -->
+    <div class="view" id="view-analytics">
+      <div class="section-header">
+        <div class="section-title">Portfolio Analytics</div>
+        <select class="date-select"><option>Last 12 Months</option><option>Last 6 Months</option><option>YTD</option></select>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Portfolio Value</div>
+          <div class="stat-value">$48.2M</div>
+          <div class="stat-change up">↑ 6.1% YoY</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cap Rate</div>
+          <div class="stat-value">5.8%</div>
+          <div class="stat-change up">↑ 0.3% QoQ</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Rent/Unit</div>
+          <div class="stat-value">$2,340</div>
+          <div class="stat-change up">↑ 3.2% YoY</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Properties</div>
+          <div class="stat-value">5</div>
+          <div class="stat-change up">+1 this year</div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:20px">
+        <div class="card">
+          <div class="card-title">Revenue by Property (Monthly)</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.73rem;margin-bottom:4px">
+                <span style="color:var(--text)">Riverside Apts</span><span style="color:var(--muted)">$41,200</span>
+              </div>
+              <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px">
+                <div style="height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.73rem;margin-bottom:4px">
+                <span style="color:var(--text)">University Flats</span><span style="color:var(--muted)">$22,400</span>
+              </div>
+              <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px">
+                <div style="height:100%;width:54%;border-radius:4px;background:linear-gradient(90deg,var(--accent2),var(--purple))"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.73rem;margin-bottom:4px">
+                <span style="color:var(--text)">Harbor View</span><span style="color:var(--muted)">$18,600</span>
+              </div>
+              <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px">
+                <div style="height:100%;width:45%;border-radius:4px;background:linear-gradient(90deg,var(--purple),var(--gold))"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.73rem;margin-bottom:4px">
+                <span style="color:var(--text)">Downtown Plaza</span><span style="color:var(--muted)">$6,800</span>
+              </div>
+              <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px">
+                <div style="height:100%;width:17%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--accent3))"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.73rem;margin-bottom:4px">
+                <span style="color:var(--text)">Maple Grove</span><span style="color:var(--muted)">$2,420</span>
+              </div>
+              <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px">
+                <div style="height:100%;width:6%;border-radius:4px;background:var(--accent3)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Expense Breakdown</div>
+          <div class="donut-wrap">
+            <div class="donut" style="background:conic-gradient(var(--accent3) 0% 35%,var(--gold) 35% 55%,var(--accent2) 55% 70%,var(--purple) 70% 82%,var(--muted) 82% 100%)">
+              <div class="donut-label" style="font-size:0.7rem;color:var(--muted)">Total<br><span style="font-size:1rem;color:var(--text)">$18.7k</span></div>
+            </div>
+          </div>
+          <div class="legend" style="margin-top:8px">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div><span style="color:var(--muted)">Maintenance</span><span style="margin-left:auto;font-weight:600;color:var(--text)">35%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div><span style="color:var(--muted)">Insurance</span><span style="margin-left:auto;font-weight:600;color:var(--text)">20%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div><span style="color:var(--muted)">Utilities</span><span style="margin-left:auto;font-weight:600;color:var(--text)">15%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div><span style="color:var(--muted)">Management</span><span style="margin-left:auto;font-weight:600;color:var(--text)">12%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--muted)"></div><span style="color:var(--muted)">Other</span><span style="margin-left:auto;font-weight:600;color:var(--text)">18%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="view" id="view-settings">
+      <div class="section-title" style="margin-bottom:24px">Account Settings</div>
+      <div class="grid-2">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card">
+            <div class="card-title">Company Profile</div>
+            <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" value="Davis Property Group"></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="jordan@davispg.com"></div>
+              <div class="form-group"><label class="form-label">Phone</label><input class="form-input" value="(415) 555-0192"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Address</label><input class="form-input" value="123 Market St, San Francisco, CA"></div>
+            <button class="btn btn-primary" style="margin-top:4px" onclick="showToast('Settings saved!','success')">Save Changes</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Notifications</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:0.8rem;font-weight:500">Rent Payment Received</div><div style="font-size:0.7rem;color:var(--muted)">Email & SMS</div></div>
+                <div style="width:36px;height:20px;background:var(--accent);border-radius:10px;cursor:pointer"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:0.8rem;font-weight:500">Maintenance Requests</div><div style="font-size:0.7rem;color:var(--muted)">Email only</div></div>
+                <div style="width:36px;height:20px;background:var(--accent);border-radius:10px;cursor:pointer"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:0.8rem;font-weight:500">Lease Expirations</div><div style="font-size:0.7rem;color:var(--muted)">90 days prior</div></div>
+                <div style="width:36px;height:20px;background:var(--accent);border-radius:10px;cursor:pointer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card">
+            <div class="card-title">Subscription Plan</div>
+            <div style="background:linear-gradient(135deg,rgba(63,185,80,0.1),rgba(88,166,255,0.1));border:1px solid rgba(63,185,80,0.2);border-radius:10px;padding:16px;margin-bottom:16px">
+              <div style="font-size:0.7rem;color:var(--accent);font-weight:700;letter-spacing:0.8px;margin-bottom:4px">PROFESSIONAL PLAN</div>
+              <div style="font-family:'Instrument Serif',serif;font-size:1.8rem;color:var(--text)">$299<span style="font-family:'Sora';font-size:0.8rem;color:var(--muted)">/mo</span></div>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">Up to 500 units · Unlimited properties</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:0.75rem;color:var(--muted)">
+              <div>✅ AI-powered tenant screening</div>
+              <div>✅ Automated rent collection</div>
+              <div>✅ Advanced reporting & analytics</div>
+              <div>✅ Owner & tenant portals</div>
+              <div>✅ Priority support</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Integrations</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+                <div style="font-size:1.2rem">🏦</div>
+                <div><div style="font-size:0.78rem;font-weight:600">Stripe</div><div style="font-size:0.68rem;color:var(--accent)">Connected</div></div>
+                <button class="btn btn-outline" style="margin-left:auto;padding:4px 10px;font-size:0.7rem">Manage</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+                <div style="font-size:1.2rem">📧</div>
+                <div><div style="font-size:0.78rem;font-weight:600">Mailchimp</div><div style="font-size:0.68rem;color:var(--muted)">Not connected</div></div>
+                <button class="btn btn-primary" style="margin-left:auto;padding:4px 10px;font-size:0.7rem">Connect</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+                <div style="font-size:1.2rem">📊</div>
+                <div><div style="font-size:0.78rem;font-weight:600">QuickBooks</div><div style="font-size:0.68rem;color:var(--accent)">Connected</div></div>
+                <button class="btn btn-outline" style="margin-left:auto;padding:4px 10px;font-size:0.7rem">Manage</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalIfBg(event)">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-text">Add New</span>
+      <span class="modal-close" onclick="closeModal()">✕</span>
+    </div>
+    <div id="modal-body">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// Navigation
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const v = document.getElementById('view-' + name);
+  if (v) v.classList.add('active');
+  if (el) el.classList.add('active');
+
+  const titles = {
+    dashboard: ['Dashboard', "Welcome back, Jordan — here's your portfolio overview"],
+    properties: ['Properties', 'Manage and monitor all your properties'],
+    tenants: ['Tenants', 'View and manage all tenant records'],
+    leasing: ['Leasing', 'Track applications, leases, and renewals'],
+    maintenance: ['Maintenance', 'Handle and track all maintenance requests'],
+    accounting: ['Accounting', 'Track income, expenses, and financial reports'],
+    reports: ['Reports', 'Generate and export detailed reports'],
+    messages: ['Messages', 'Communicate with tenants and owners'],
+    analytics: ['Analytics', 'Deep-dive into portfolio performance'],
+    settings: ['Settings', 'Configure your account and preferences'],
+  };
+  const t = titles[name] || [name, ''];
+  document.getElementById('page-title').textContent = t[0];
+  document.getElementById('page-subtitle').textContent = t[1];
+}
+
+// Filter tabs
+function filterTabs(el) {
+  el.parentNode.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Modal system
+const modalForms = {
+  property: {
+    title: '＋ Add Property',
+    html: `
+      <div class="form-group"><label class="form-label">Property Name</label><input class="form-input" placeholder="e.g. Sunset Villas"></div>
+      <div class="form-group"><label class="form-label">Address</label><input class="form-input" placeholder="Street address"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">City</label><input class="form-input" placeholder="City"></div>
+        <div class="form-group"><label class="form-label">State</label><input class="form-input" placeholder="CA"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Total Units</label><input class="form-input" type="number" placeholder="24"></div>
+        <div class="form-group"><label class="form-label">Type</label>
+          <select class="form-select"><option>Multifamily</option><option>Single Family</option><option>Commercial</option><option>Student Housing</option></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitModal('Property added!')">Add Property</button>
+      </div>`
+  },
+  tenant: {
+    title: '＋ Add Tenant',
+    html: `
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" placeholder="Jane"></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" placeholder="Smith"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="jane@example.com"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" placeholder="(555) 000-0000"></div>
+        <div class="form-group"><label class="form-label">Unit</label><input class="form-input" placeholder="4B"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Lease Start</label><input class="form-input" type="date"></div>
+        <div class="form-group"><label class="form-label">Lease End</label><input class="form-input" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Monthly Rent ($)</label><input class="form-input" type="number" placeholder="1900"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitModal('Tenant added successfully!')">Add Tenant</button>
+      </div>`
+  },
+  maintenance: {
+    title: '🔧 New Maintenance Request',
+    html: `
+      <div class="form-group"><label class="form-label">Issue Title</label><input class="form-input" placeholder="e.g. Leaking faucet in bathroom"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Property</label>
+          <select class="form-select"><option>Riverside Apartments</option><option>Harbor View Condos</option><option>Downtown Plaza</option><option>Maple Grove</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Unit</label><input class="form-input" placeholder="3C"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Category</label>
+          <select class="form-select"><option>Plumbing</option><option>Electrical</option><option>HVAC</option><option>Appliances</option><option>Other</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Priority</label>
+          <select class="form-select"><option>High</option><option>Medium</option><option>Low</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" rows="3" placeholder="Describe the issue in detail…" style="resize:vertical"></textarea></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitModal('Request submitted!')">Submit Request</button>
+      </div>`
+  },
+  lead: {
+    title: '📝 Add Leasing Lead',
+    html: `
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" placeholder="First"></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" placeholder="Last"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" placeholder="email@example.com"></div>
+      <div class="form-group"><label class="form-label">Desired Unit / Property</label>
+        <select class="form-select"><option>Unit 5D — Riverside ($2,200)</option><option>Unit 2A — Riverside ($1,800)</option><option>Unit 6C — Harbor View ($1,950)</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Stage</label>
+          <select class="form-select"><option>Inquiry</option><option>Application</option><option>Screening</option><option>Approved</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Move-in Date</label><input class="form-input" type="date"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitModal('Lead added to pipeline!')">Add Lead</button>
+      </div>`
+  },
+  transaction: {
+    title: '💰 Add Transaction',
+    html: `
+      <div class="form-group"><label class="form-label">Description</label><input class="form-input" placeholder="e.g. Plumbing repair — Unit 4B"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label>
+          <select class="form-select"><option>Income</option><option>Expense</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Amount ($)</label><input class="form-input" type="number" placeholder="500"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Category</label>
+          <select class="form-select"><option>Rent</option><option>Maintenance</option><option>Insurance</option><option>Utilities</option><option>Landscaping</option><option>Other</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Property</label>
+        <select class="form-select"><option>All Properties</option><option>Riverside Apartments</option><option>Harbor View Condos</option><option>Downtown Plaza</option><option>Maple Grove</option></select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitModal('Transaction recorded!')">Save Transaction</button>
+      </div>`
+  },
+};
+
+function openModal(type) {
+  const form = modalForms[type] || modalForms['property'];
+  document.getElementById('modal-title-text').textContent = form.title;
+  document.getElementById('modal-body').innerHTML = form.html;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function closeModalIfBg(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+function submitModal(msg) {
+  closeModal();
+  showToast(msg, 'success');
+}
+
+// Toast
+function showToast(msg, type='success') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span class="toast-icon">${type==='success'?'✅':'❌'}</span>${msg}`;
+  c.appendChild(t);
+  setTimeout(() => t.style.opacity = '0', 2700);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// Default modal opens "property"
+function openModal(type) {
+  const key = type || 'property';
+  const form = modalForms[key] || modalForms['property'];
+  document.getElementById('modal-title-text').textContent = form.title;
+  document.getElementById('modal-body').innerHTML = form.html;
+  document.getElementById('modal').classList.add('open');
+}
+
+// Greet on load
+setTimeout(() => showToast('Welcome back, Jordan! 👋','success'), 800);
+</script>
+</body>
+</html>
